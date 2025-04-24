@@ -1,6 +1,6 @@
-import type { StorageVersioningJSON } from '..';
+import type { StorageVersioningJSON } from '.';
 import type { StorageItems, StorageVersioning, StorageVersions } from './types';
-import { Store } from 'simorg-store';
+import { store } from 'simorg-store';
 
 //
 //
@@ -11,7 +11,7 @@ export function storageVersioning<T extends StorageItems>(
   noLocalStorage = false,
 ): StorageVersioning<T> {
   const timeouts: Record<string, any> = {};
-  const internalStore = new Store(initial);
+  const internalStore = store(initial);
 
   //
   //
@@ -201,8 +201,8 @@ export function storageVersioning<T extends StorageItems>(
       if (key) return internalStore.get()[key];
       return internalStore.get();
     },
-    subscribe: internalStore.subscribe.bind(internalStore),
-    set: internalStore.set.bind(internalStore),
+    subscribe: internalStore.subscribe,
+    set: internalStore.set,
     loadAll,
   };
 }
