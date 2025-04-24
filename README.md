@@ -17,6 +17,7 @@ Você pode instalar o `storage-versioning` via npm:
 npm i storage-versioning
 pnpm i storage-versioning
 yarn add storage-versioning
+bun add storage-versioning
 ```
 
 ### Definindo storageVersioning

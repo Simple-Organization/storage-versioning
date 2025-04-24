@@ -1,37 +1,37 @@
 {
   "name": "storage-versioning",
-  "main": "dist/index.js",
   "version": "4.0.0-next.11",
   "scripts": {
     "build": "tsc && rollup -c && node esbuild.mjs",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "test": "playwright test",
-    "prepack": "pnpm build"
+    "prepack": "pnpm build",
+    "test": "playwright test"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Simple-Organization/storage-versioning.git"
+  "main": "dist/index.js",
+  "dependencies": {
+    "simorg-store": "1.0.0-next.1"
   },
-  "bugs": "https://github.com/Simple-Organization/storage-versioning/issues",
-  "license": "MIT",
   "devDependencies": {
-    "@playwright/test": "^1.46.1",
+    "@playwright/test": "^1.47.1",
     "esbuild": "^0.23.1",
     "prettier": "^3.3.3",
-    "rollup": "^4.21.2",
+    "rollup": "^4.21.3",
     "rollup-plugin-dts": "^6.1.1",
     "schemas-lib": "3.0.0-next.0",
-    "typescript": "^5.5.4",
-    "vite": "^5.4.2"
+    "typescript": "^5.6.2",
+    "vite": "^5.4.6"
   },
-  "type": "module",
   "files": [
     "dist/index.js",
     "dist/index.d.ts"
   ],
-  "types": "dist/index.d.ts",
+  "bugs": "https://github.com/Simple-Organization/storage-versioning/issues",
+  "license": "MIT",
   "packageManager": "pnpm@9.6.0",
-  "dependencies": {
-    "simorg-store": "1.0.0-next.1"
-  }
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Simple-Organization/storage-versioning.git"
+  },
+  "type": "module",
+  "types": "dist/index.d.ts"
 }
