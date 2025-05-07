@@ -1,6 +1,7 @@
 import type { StorageVersioningJSON } from '.';
 import type { StorageItems, StorageVersioning, StorageVersions } from './types';
 import { store } from 'simorg-store';
+import type { WritableSignal, ReadableSignal } from 'simorg-store';
 
 //
 //
@@ -8,27 +9,20 @@ import { store } from 'simorg-store';
 export function storageVersioning<T extends StorageItems>(
   versioning: StorageVersions<T>,
   initial: T = {} as any,
-): StorageVersioning<T> & { [K in keyof T]: ReturnType<typeof store<T[K]>> } {
+): StorageVersioning<T> & { [K in keyof T]: ReadableSignal<T[K]> } {
   const timeouts: Record<string, any> = {};
   const internalStore = store(initial);
 
   // Cria um store separado para cada propriedade
-  const propertyStores = {} as { [K in keyof T]: ReturnType<typeof store<T[K]>> };
+  const propertyStores = {} as { [K in keyof T]: WritableSignal<T[K]> };
+  const readableStores = {} as { [K in keyof T]: ReadableSignal<T[K]> };
+
   for (const key of Object.keys(versioning) as Array<keyof T>) {
     propertyStores[key] = store(initial[key]);
-
-    // Sincroniza o store individual com o global
-    internalStore.subscribe((value) => {
-      propertyStores[key].set(value[key]);
-    });
-    
-    // Opcional: sincronizar alterações do store individual para o global
-    propertyStores[key].subscribe((v) => {
-      const current = internalStore.get();
-      if (current[key] !== v) {
-        internalStore.set({ ...current, [key]: v });
-      }
-    });
+    readableStores[key] = {
+      get: propertyStores[key].get,
+      subscribe: propertyStores[key].subscribe,
+    }
   }
 
   //
@@ -166,7 +160,12 @@ export function storageVersioning<T extends StorageItems>(
       return internalStore.get();
     },
     subscribe: internalStore.subscribe,
-    set: internalStore.set,
+    set(value: T): void {
+      internalStore.set(value);
+      for (const key in propertyStores) {
+        propertyStores[key].set(value[key]);
+      }
+    },
     loadAll,
-  }, propertyStores);
+  }, readableStores);
 }

@@ -436,3 +436,57 @@ test('When localStorage is null, it must return null when load', async ({
 
   expect(result1).toBe(null);
 });
+
+//
+//
+
+test('Must get individual item from individual store', async ({ page }) => {
+  await page.goto('http://localhost:5173/');
+
+  const result1 = await page.evaluate(() => {
+    const storage = __currentStorageVersioning<StorageItems1>({
+      key1: 33,
+    });
+    storage.save('key1', 'John' as any); // Save a string, but the schema requires a number
+
+    return storage.key1.get();
+  });
+
+  //
+
+  expect(result1).toBe('John');
+});
+
+//
+//
+
+test('Must get individual item from subscribe from individual store', async ({ page }) => {
+  await page.goto('http://localhost:5173/');
+
+  const result1 = await page.evaluate(() => {
+    const storage = __currentStorageVersioning<StorageItems1>({
+      key1: 33,
+    });
+    
+    let initial = true;
+    const unsub = storage.key1.subscribe((value) => {
+      if (initial) {
+        initial = false;
+        return;
+      }
+
+      document.title = value + '';
+      unsub();
+    });
+
+    storage.save('key1', 'John' as any);
+
+    return storage.key1.get();
+  });
+
+  //
+
+  expect(result1).toBe('John');
+
+  expect(await page.title()).toBe('John');
+});
