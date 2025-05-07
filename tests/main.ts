@@ -1,6 +1,5 @@
 import { int } from 'schemas-lib';
 import { storageVersioning } from '../src';
-import { store } from 'simorg-store';
 
 //
 //

@@ -34,7 +34,6 @@ const storage = storageVersioning<Items>(
     person: (data) => doSomeValidation(data),
   },
   { ...initialValues }, // Argumento opcional para précarregar valores
-  noLocalStorage, // Para testes ou SSR, torna métodos load, save e listen em noops
 );
 
 const unsubscribe = storage.listen(); // passa a ouvir o evento window.addEventListener('storage')
