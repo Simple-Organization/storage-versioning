@@ -8,9 +8,28 @@ import { store } from 'simorg-store';
 export function storageVersioning<T extends StorageItems>(
   versioning: StorageVersions<T>,
   initial: T = {} as any,
-): StorageVersioning<T> {
+): StorageVersioning<T> & { [K in keyof T]: ReturnType<typeof store<T[K]>> } {
   const timeouts: Record<string, any> = {};
   const internalStore = store(initial);
+
+  // Cria um store separado para cada propriedade
+  const propertyStores = {} as { [K in keyof T]: ReturnType<typeof store<T[K]>> };
+  for (const key of Object.keys(versioning) as Array<keyof T>) {
+    propertyStores[key] = store(initial[key]);
+
+    // Sincroniza o store individual com o global
+    internalStore.subscribe((value) => {
+      propertyStores[key].set(value[key]);
+    });
+    
+    // Opcional: sincronizar alterações do store individual para o global
+    propertyStores[key].subscribe((v) => {
+      const current = internalStore.get();
+      if (current[key] !== v) {
+        internalStore.set({ ...current, [key]: v });
+      }
+    });
+  }
 
   //
   //
@@ -118,6 +137,7 @@ export function storageVersioning<T extends StorageItems>(
     if (value[key] === data) return data;
 
     internalStore.set({ ...value, [key]: data });
+    propertyStores[key].set(data as T[K]);
     return data;
   }
 
@@ -137,7 +157,7 @@ export function storageVersioning<T extends StorageItems>(
   //
   //
 
-  return {
+  return Object.assign({
     load,
     save,
     listen,
@@ -148,5 +168,5 @@ export function storageVersioning<T extends StorageItems>(
     subscribe: internalStore.subscribe,
     set: internalStore.set,
     loadAll,
-  };
+  }, propertyStores);
 }
