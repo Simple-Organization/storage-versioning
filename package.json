@@ -1,8 +1,8 @@
 {
   "name": "storage-versioning",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "scripts": {
-    "build": "tsc && rollup -c && node esbuild.mjs",
+    "build": "rollup -c && node esbuild.mjs",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "prepack": "bun run build",
     "test": "playwright test"

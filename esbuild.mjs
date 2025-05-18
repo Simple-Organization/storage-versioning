@@ -5,5 +5,5 @@ await esbuild.build({
   bundle: true,
   outdir: 'dist',
   format: 'esm',
-  external: ['simorg-store'],
+  external: ['@preact/signals', 'schemas-lib'],
 });
