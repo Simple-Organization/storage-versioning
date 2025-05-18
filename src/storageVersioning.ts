@@ -111,6 +111,20 @@ export function storageVersioning<T extends StorageItems>(
   //
 
   function setValue<K extends keyof T>(key: K, data: T[K] | null): T[K] | null {
+    if (data === null) {
+      const def = versioning[key as string].def;
+      let value: any;
+
+      if (typeof def === 'function') {
+        value = def();
+      } else {
+        value = null; // O valor do def é o symbol EMPTY_VALUE
+      }
+
+      propertyStores[key].value = value;
+      return value;
+    }
+
     propertyStores[key].value = data as T[K];
     return data;
   }
