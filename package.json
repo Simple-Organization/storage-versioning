@@ -1,6 +1,6 @@
 {
   "name": "storage-versioning",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "scripts": {
     "build": "tsc && rollup -c && node esbuild.mjs",
     "prepack": "bun run build"

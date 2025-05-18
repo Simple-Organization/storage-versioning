@@ -14,5 +14,5 @@
     "stripInternal": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["src", "tests"]
+  "include": ["src"]
 }

@@ -4,27 +4,24 @@ import { s } from 'schemas-lib';
 
 let localStorageData: Record<string, string | null> = {};
 
-globalThis.localStorage = {
-  getItem: (key: string) => {
-    return localStorageData[key] || null;
-  },
-  setItem: (key: string, value: string) => {
-    localStorageData[key] = value + '';
-  },
-  removeItem: (key: string) => {
-    delete localStorageData[key];
-  },
-  clear: () => {
-    localStorageData = {};
-  },
-} as any;
-
 // Limpa o localStorage antes de cada teste
 beforeEach(() => {
-  localStorage.clear();
-});
-afterEach(() => {
-  localStorage.clear();
+  globalThis.localStorage = {
+    getItem: (key: string) => {
+      return localStorageData[key] || null;
+    },
+    setItem: (key: string, value: string) => {
+      localStorageData[key] = value + '';
+    },
+    removeItem: (key: string) => {
+      delete localStorageData[key];
+    },
+    clear: () => {
+      localStorageData = {};
+    },
+  } as any;
+
+  localStorageData = {};
 });
 
 //
@@ -139,4 +136,53 @@ test('loadAll loads all keys', () => {
   storage2.loadAll();
   expect(storage2.a.value).toBe('AA');
   expect(storage2.b.value).toBe('B');
+});
+
+//
+//
+
+test('Caso tenha um valor definido com default, deve sempre retornar o valor definido como default', () => {
+  const versioning = { foo: s.any().default('value') };
+  const storage = storageVersioning(versioning);
+
+  // O valor só é definido quando lêmos o valor
+  storage.loadAll();
+  expect(storage.foo.value).toBe('value');
+
+  storage.save('foo', 'foo');
+  expect(storage.foo.value).toBe('foo');
+
+  storage.save('foo', null);
+  expect(storage.foo.value).toBe('value');
+
+  // Limpa sinais para simular reload
+  const storage2 = storageVersioning(versioning);
+  storage2.loadAll();
+
+  expect(storage2.foo.value).toBe('value');
+  expect(localStorage.getItem('foo')).toBe(null);
+});
+
+//
+//
+
+test('Caso dê erro no localStorage, ele deve definir o valor padrão', () => {
+  const versioning = { foo: s.any().default('value') };
+
+  localStorage.getItem = () => {
+    throw new Error('Erro no localStorage');
+  };
+
+  const storage = storageVersioning(versioning);
+
+  // O valor só é definido quando lêmos o valor
+  const oldConsoleError = console.error;
+  console.error = () => {
+    console.log(
+      'console.error foi substituído momentaneamente para não poluir o console',
+    );
+  };
+  storage.loadAll();
+  console.error = oldConsoleError;
+  expect(storage.foo.value).toBe('value');
 });
