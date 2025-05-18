@@ -11,7 +11,7 @@ import { Signal, signal } from '@preact/signals';
 
 export function storageVersioning<T extends StorageItems>(
   versioning: StorageVersions<T>,
-  initial: T = {} as any,
+  initial: Partial<T> = {},
 ): StorageVersioning<T> & { [K in keyof T]: Signal<T[K]> } {
   const timeouts: Record<string, any> = {};
 
@@ -19,7 +19,13 @@ export function storageVersioning<T extends StorageItems>(
   const propertyStores = {} as { [K in keyof T]: Signal<T[K]> };
 
   for (const key of Object.keys(versioning) as Array<keyof T>) {
-    propertyStores[key] = signal(initial[key]);
+    if (!versioning[key as string].def) {
+      throw new Error(
+        `[storageVersioning] The schema for ${key as string} must have a default() method.`,
+      );
+    }
+
+    propertyStores[key] = signal(initial[key]) as Signal<T[typeof key]>;
   }
 
   //
@@ -29,11 +35,11 @@ export function storageVersioning<T extends StorageItems>(
     clearTimeout(timeouts[key as string]);
 
     if (data !== null && data !== undefined) {
+      data = versioning[key as string].parse(data, null) as T[K];
+
       const dataToSave: StorageVersioningJSON<T> = {
         data,
       };
-
-      dataToSave.data = versioning[key as string].parse(data);
 
       if (exp) {
         dataToSave.exp = exp.getTime();
@@ -64,15 +70,7 @@ export function storageVersioning<T extends StorageItems>(
 
       const parsed: StorageVersioningJSON<T> = JSON.parse(strItem);
 
-      const _versioning = versioning[key as string] as any;
-
-      if (typeof _versioning === 'function') {
-        parsed.data = _versioning(parsed.data);
-      } else {
-        if (parsed.v !== _versioning) {
-          return setValue(key, null);
-        }
-      }
+      parsed.data = versioning[key as string].parse(parsed.data, null);
 
       if (parsed.exp) {
         const now = new Date().getTime();

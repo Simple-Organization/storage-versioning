@@ -5,9 +5,9 @@
 ## Recursos
 
 - Sincronização automática do `localStorage` entre abas
-- Gerenciamento de versões de `localStorage` com versão ou `schemas` (como Zod)
+- Gerenciamento de versões de `localStorage` usando exclusivamente [schemas-lib](https://github.com/Simple-Organization/schemas-lib)
 - Expiração da chave por tempo
-- Reatividade com signals usando [simorg-store](https://github.com/Simple-Organization/simorg-store#readme)
+- Reatividade usando [@preact/signals](https://preactjs.com/guide/v10/signals/)
 
 ## Instalação
 
@@ -23,15 +23,28 @@ bun add storage-versioning
 ### Definindo storageVersioning
 
 ```ts
+import { s } from 'schemas-lib';
+
 export type Items = {
   user: LoggedUser;
   person: PersonObject;
 };
 
+const userSchema = s
+  .object({
+    name: s.string(),
+    age: s.number(),
+  })
+  .default({ name: '', age: 0 });
+
+const personSchema = s.object({
+  // ...definição do schema...
+});
+
 const storage = storageVersioning<Items>(
   {
-    user: 1, // Versão guardada
-    person: (data) => doSomeValidation(data),
+    user: userSchema,
+    person: personSchema,
   },
   { ...initialValues }, // Argumento opcional para précarregar valores
 );
@@ -48,11 +61,11 @@ storage.loadAll();
 // Você pode chamar individualmente também
 storage.load('user');
 
-// Retorna todos os itens
-storage.get();
+// Retorna todos os itens (como signals)
+storage.user.value;
 
 // Retorna um item
-storage.get('user');
+storage.person.value;
 ```
 
 ### Salvando dados
@@ -64,52 +77,45 @@ storage.save('user', { name: 'John Doe', age: 30 });
 storage.save('user', data, new Date(Date.now() + 86400000));
 
 // Atualiza a reatividade, mas não salva no localStorage
-storage.set({ name: 'John Doe', age: 30 });
+storage.user.value = { name: 'John Doe', age: 30 };
 ```
 
 ### Versionamento e validação
 
-Você pode controlar um item pela versão dele, ou por um schema como do [Zod](https://zod.dev/) ou [Yup](https://github.com/jquense/yup)
+O versionamento e validação dos dados é feito exclusivamente com a biblioteca [schemas-lib](https://github.com/Simple-Organization/schemas-lib).
 
 ```ts
-// Com versionamento por string ou number
-const storage = storageVersioning<Items>({
-  user: 1,
-  person: 'v3.0',
-});
+import { s } from 'schemas-lib';
 
-// Com lib como zod
-const schema = z
+const personSchema = s
   .object({
-    name: z.string(),
+    name: s.string(),
   })
-  .catch({ name: 'Jhon' });
+  .default({ name: 'Jhon' });
 
 const storage = storageVersioning<Items>({
-  person: (data) => schema.parse(data),
+  person: personSchema,
 });
 ```
 
-A validação com a lib ocorrerá sempre que chamar `.save` ou `load`
+A validação com a lib ocorrerá sempre que chamar `.save` ou `load`.
 
-É recomendado usar recurso como `.catch` do zod para dados que possam vir incorretos
+É necessário usar o método `.default` do schemas-lib para dados que possam vir incorretos.
 
-### Configurando reatividade (signals)
+### Reatividade com signals
 
-Essa lib usa [simorg-store](https://github.com/Simple-Organization/simorg-store#readme) para configurar a reatividade entre `React`, `Preact`. `Svelte`, `Vue`, `Solid`, leia mais no repositório do `simorg-store`
+Essa lib usa [@preact/signals](https://preactjs.com/guide/v10/signals/) para reatividade. Cada chave definida no storageVersioning retorna um signal reativo.
 
 ---
 
 ### Tipo JSON salvo
 
-- **v**: Versão dos dados (string ou número).
 - **data**: Dados a serem armazenados.
 - **exp**: Data de expiração em milissegundos desde a época Unix.
 
 ```ts
 export type StorageVersioningJSON<T> = {
   data: T;
-  v?: string | number;
   exp?: number;
 };
 ```

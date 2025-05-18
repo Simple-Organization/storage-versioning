@@ -1,11 +1,9 @@
 {
   "name": "storage-versioning",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "scripts": {
-    "build": "rollup -c && node esbuild.mjs",
-    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "prepack": "bun run build",
-    "test": "playwright test"
+    "build": "tsc && rollup -c && node esbuild.mjs",
+    "prepack": "bun run build"
   },
   "main": "dist/index.js",
   "dependencies": {
@@ -13,13 +11,11 @@
     "schemas-lib": "latest"
   },
   "devDependencies": {
-    "@playwright/test": "^1.52.0",
     "esbuild": "^0.23.1",
     "prettier": "^3.5.3",
     "rollup": "^4.41.0",
     "rollup-plugin-dts": "^6.2.1",
     "typescript": "^5.8.3",
-    "vite": "^5.4.19",
     "@types/bun": "^1.2.13"
   },
   "files": [
