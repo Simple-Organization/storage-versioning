@@ -1,7 +1,10 @@
-import type { StorageVersioningJSON } from '.';
-import type { StorageItems, StorageVersioning, StorageVersions } from './types';
-import { store } from 'simorg-store';
-import type { WritableSignal, ReadableSignal } from 'simorg-store';
+import type {
+  StorageItems,
+  StorageVersioning,
+  StorageVersioningJSON,
+  StorageVersions,
+} from './types';
+import { Signal, signal } from '@preact/signals';
 
 //
 //
@@ -9,20 +12,14 @@ import type { WritableSignal, ReadableSignal } from 'simorg-store';
 export function storageVersioning<T extends StorageItems>(
   versioning: StorageVersions<T>,
   initial: T = {} as any,
-): StorageVersioning<T> & { [K in keyof T]: ReadableSignal<T[K]> } {
+): StorageVersioning<T> & { [K in keyof T]: Signal<T[K]> } {
   const timeouts: Record<string, any> = {};
-  const internalStore = store(initial);
 
   // Cria um store separado para cada propriedade
-  const propertyStores = {} as { [K in keyof T]: WritableSignal<T[K]> };
-  const readableStores = {} as { [K in keyof T]: ReadableSignal<T[K]> };
+  const propertyStores = {} as { [K in keyof T]: Signal<T[K]> };
 
   for (const key of Object.keys(versioning) as Array<keyof T>) {
-    propertyStores[key] = store(initial[key]);
-    readableStores[key] = {
-      get: propertyStores[key].get,
-      subscribe: propertyStores[key].subscribe,
-    }
+    propertyStores[key] = signal(initial[key]);
   }
 
   //
@@ -36,15 +33,7 @@ export function storageVersioning<T extends StorageItems>(
         data,
       };
 
-      const _versioning = versioning[key as string] as any;
-
-      if (_versioning) {
-        if (typeof _versioning === 'function') {
-          dataToSave.data = _versioning(data);
-        } else {
-          dataToSave.v = _versioning;
-        }
-      }
+      dataToSave.data = versioning[key as string].parse(data);
 
       if (exp) {
         dataToSave.exp = exp.getTime();
@@ -100,10 +89,7 @@ export function storageVersioning<T extends StorageItems>(
 
       return setValue(key, parsed.data as any);
     } catch (error) {
-      console.error(
-        `[Error loading localStorage for ${key as string}]`,
-        error,
-      );
+      console.error(`[Error loading localStorage for ${key as string}]`, error);
     }
 
     return setValue(key, null);
@@ -127,45 +113,31 @@ export function storageVersioning<T extends StorageItems>(
   //
 
   function setValue<K extends keyof T>(key: K, data: T[K] | null): T[K] | null {
-    const value = internalStore.get();
-    if (value[key] === data) return data;
-
-    internalStore.set({ ...value, [key]: data });
-    propertyStores[key].set(data as T[K]);
+    propertyStores[key].value = data as T[K];
     return data;
   }
 
   //
   //
 
-  function loadAll(): T {
+  function loadAll(): void {
     const keys = Object.keys(versioning) as Array<keyof T>;
 
     for (const key of keys) {
       load(key);
     }
-
-    return internalStore.get();
   }
 
   //
   //
 
-  return Object.assign({
-    load,
-    save,
-    listen,
-    get(key?: string): any {
-      if (key) return internalStore.get()[key];
-      return internalStore.get();
+  return Object.assign(
+    {
+      load,
+      save,
+      listen,
+      loadAll,
     },
-    subscribe: internalStore.subscribe,
-    set(value: T): void {
-      internalStore.set(value);
-      for (const key in propertyStores) {
-        propertyStores[key].set(value[key]);
-      }
-    },
-    loadAll,
-  }, readableStores);
+    propertyStores,
+  );
 }

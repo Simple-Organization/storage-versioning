@@ -1,3 +1,4 @@
+import type { Schema } from 'schemas-lib';
 
 //
 //
@@ -10,14 +11,13 @@ export type StorageItems = {
 //
 
 export type StorageVersions<T extends StorageItems> = {
-  [K in keyof T]: string | number | ((value: T[K]) => T[K]);
+  [K in keyof T]: Schema<T[K]>;
 };
 
 //
 //
 
-export interface StorageVersioning<T extends StorageItems>
-  extends WritableSignal<T> {
+export interface StorageVersioning<T extends StorageItems> {
   /**
    * Load the data from the localStorage
    *
@@ -29,18 +29,6 @@ export interface StorageVersioning<T extends StorageItems>
    * @returns the data related to that key or null
    */
   load<K extends keyof T>(key: K): T[K] | null;
-
-  /**
-   * Get the data from the localStorage
-   */
-  get(): T;
-
-  /**
-   * Get specific data from the localStorage
-   *
-   * @param key the key to get
-   */
-  get<K extends keyof T>(key: K): T[K] | null;
 
   /**
    * Save the data to the localStorage
@@ -64,31 +52,14 @@ export interface StorageVersioning<T extends StorageItems>
   /**
    * Load all the data from the localStorage
    */
-  loadAll(): T;
+  loadAll(): void;
 }
 
-/**
- * Represents a signal/atom that holds a value and allows subscribing to changes.
- */
-type ReadableSignal<T = any> = {
-  /**
-   * The current value of the signal/atom.
-   */
-  get: () => T;
-  /**
-   * Subscribes to changes in the signal/atom.
-   * @param callback - The function to call when the signal/atom's value changes.
-   * @returns A function that unsubscribes the callback from the signal/atom.
-   */
-  subscribe: (callback: (value: T) => void) => () => void;
+//
+//
+
+export type StorageVersioningJSON<T> = {
+  data: T;
+  v?: string | number;
+  exp?: number;
 };
-
-/**
- * Represents a signal/atom that holds a value and allows subscribing to changes.
- */
-interface WritableSignal<T = any> extends ReadableSignal<T> {
-    /**
-     * Sets the value of the signal/atom.
-     */
-    set: (value: T) => void;
-}

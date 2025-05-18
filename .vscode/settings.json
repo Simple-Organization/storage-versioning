@@ -4,5 +4,6 @@
     "*.tsx": "${basename}.css",
     "package.json": "pnpm-workspace.yaml, bun.lock, .gitignore, .prettierrc.yml, tsconfig.json"
   },
-  "explorer.fileNesting.expand": false
+  "explorer.fileNesting.expand": false,
+  "editor.formatOnSave": true
 }

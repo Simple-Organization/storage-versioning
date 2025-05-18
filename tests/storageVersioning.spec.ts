@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { int, Schema } from 'schemas-lib';
 import { storageVersioning } from '../src/storageVersioning';
+import { s, Schema } from 'schemas-lib';
 
 //
 //
@@ -15,10 +15,10 @@ type StorageItems1 = {
   key1: string | null | Record<string, string>;
 };
 
-type StorageItems2 = {
-  key1: string | null | Record<string, string>;
-  key2: string | null | Record<string, string>;
-};
+//
+//
+
+const anySchema = s.any();
 
 //
 //
@@ -44,7 +44,7 @@ test('StorageVersioning must save and load successfully', async ({ page }) => {
 
   const result1 = await page.evaluate(() => {
     const storage = __currentStorageVersioning<StorageItems1>({
-      key1: 1,
+      key1: anySchema,
     });
 
     return storage.load('key1');
@@ -57,7 +57,7 @@ test('StorageVersioning must save and load successfully', async ({ page }) => {
 
   const result2 = await page.evaluate(() => {
     const storage = __currentStorageVersioning<StorageItems1>({
-      key1: 1,
+      key1: anySchema,
     });
 
     storage.save('key1', { name: 'John' });
@@ -72,7 +72,7 @@ test('StorageVersioning must save and load successfully', async ({ page }) => {
 
   const result3 = await page.evaluate(() => {
     const storage = __currentStorageVersioning<StorageItems1>({
-      key1: 1,
+      key1: anySchema,
     });
 
     return storage.load('key1');
@@ -92,7 +92,7 @@ test('When change version, must return null', async ({ page }) => {
 
   const result1 = await page.evaluate(() => {
     const storage = __currentStorageVersioning<StorageItems1>({
-      key1: 1,
+      key1: anySchema,
     });
 
     storage.save('key1', { name: 'John' });
@@ -107,7 +107,7 @@ test('When change version, must return null', async ({ page }) => {
 
   const result2 = await page.evaluate(() => {
     const storage = __currentStorageVersioning<StorageItems1>({
-      key1: 1,
+      key1: anySchema,
     });
 
     return storage.load('key1');
@@ -120,7 +120,7 @@ test('When change version, must return null', async ({ page }) => {
 
   const result3 = await page.evaluate(() => {
     const storage = __currentStorageVersioning({
-      key1: 2,
+      key1: anySchema,
     });
 
     return storage.load('key1');
@@ -133,7 +133,7 @@ test('When change version, must return null', async ({ page }) => {
 
   const result4 = await page.evaluate(() => {
     const storage = __currentStorageVersioning({
-      key1: 1,
+      key1: anySchema,
     });
 
     return storage.load('key1');
@@ -153,7 +153,7 @@ test('Must expirate', async ({ page }) => {
 
   const result1 = await page.evaluate(() => {
     const storage = __currentStorageVersioning({
-      key1: 1,
+      key1: anySchema,
     });
 
     const exp = new Date();
@@ -175,7 +175,7 @@ test('Must expirate', async ({ page }) => {
 
   const result2 = await page.evaluate(() => {
     const storage = __currentStorageVersioning({
-      key1: 1,
+      key1: anySchema,
     });
 
     return storage.load('key1');
@@ -195,7 +195,7 @@ test('Expiration must notify', async ({ page }) => {
 
   const result1 = await page.evaluate(() => {
     const storage = __currentStorageVersioning<StorageItems1>({
-      key1: 1,
+      key1: anySchema,
     });
 
     const exp = new Date();
@@ -204,13 +204,13 @@ test('Expiration must notify', async ({ page }) => {
     storage.save('key1', 'Jhon', exp);
 
     let initial = true;
-    const unsub = storage.subscribe((values) => {
+    const unsub = storage.key1.subscribe((values) => {
       if (initial) {
         initial = false;
         return;
       }
 
-      document.title = values.key1 + '';
+      document.title = storage.key1.value + '';
       unsub();
     });
 
@@ -257,17 +257,17 @@ test('Expiration must notify without save', async ({ page }) => {
 
   const result1 = await page.evaluate(() => {
     const storage = __currentStorageVersioning<StorageItems1>({
-      key1: 1,
+      key1: anySchema,
     });
 
     let initial = true;
-    storage.subscribe((values) => {
+    storage.key1.subscribe((values) => {
       if (initial) {
         initial = false;
         return;
       }
 
-      document.title = values.key1 + '';
+      document.title = storage.key1.value + '';
     });
 
     return storage.load('key1');
@@ -288,35 +288,8 @@ test('Expiration must notify without save', async ({ page }) => {
 //
 //
 
-test('storageGroup must load all storages', async ({ page }) => {
-  await page.goto('http://localhost:5173/');
-
-  //
-  // Must start with null
-
-  const result1 = await page.evaluate(() => {
-    const storage = __currentStorageVersioning<StorageItems2>({
-      key1: 1,
-      key2: 2,
-    });
-
-    storage.save('key1', 'John');
-    storage.save('key2', 'Doe');
-
-    return storage.get();
-  });
-
-  expect(result1).toEqual({
-    key1: 'John',
-    key2: 'Doe',
-  });
-});
-
-//
-//
-
 test('Must validate with schemas-lib when save', async ({ page }) => {
-  const schema = int().catch(1);
+  const schema = s.int();
 
   expect(schema.parse(1)).toBe(1);
   expect(schema.parse('asdasfasdas')).toBe(1);
@@ -328,7 +301,7 @@ test('Must validate with schemas-lib when save', async ({ page }) => {
 
   const result1 = await page.evaluate(() => {
     const storage = __currentStorageVersioning<StorageItems1>({
-      key1: (data) => __schema.parse(data) as any as string,
+      key1: __schema,
     });
 
     // When save it will be parsed to 1
@@ -338,7 +311,7 @@ test('Must validate with schemas-lib when save', async ({ page }) => {
 
     storage.load('key1');
 
-    return storage.get().key1;
+    return storage.key1.value;
   });
 
   //
@@ -371,7 +344,7 @@ test('Must validate with schemas-lib when load', async ({ page }) => {
     // the schema is in main.ts file
     storage2.load('key1');
 
-    return storage2.get().key1;
+    return storage2.key1.value;
   });
 
   //
@@ -396,7 +369,7 @@ test('Must load a wrong format localStorage item', async ({ page }) => {
 
     storage.load('key1');
 
-    return storage.get('key1');
+    return storage.key1.value;
   });
 
   //
@@ -428,7 +401,7 @@ test('When localStorage is null, it must return null when load', async ({
     // the schema is in main.ts file
     storage2.load('key1');
 
-    return storage2.get().key1;
+    return storage2.key1.value;
   });
 
   //
@@ -449,7 +422,7 @@ test('Must get individual item from individual store', async ({ page }) => {
     });
     storage.save('key1', 'John' as any); // Save a string, but the schema requires a number
 
-    return storage.key1.get();
+    return storage.key1.value;
   });
 
   //
@@ -460,14 +433,16 @@ test('Must get individual item from individual store', async ({ page }) => {
 //
 //
 
-test('Must get individual item from subscribe from individual store', async ({ page }) => {
+test('Must get individual item from subscribe from individual store', async ({
+  page,
+}) => {
   await page.goto('http://localhost:5173/');
 
   const result1 = await page.evaluate(() => {
     const storage = __currentStorageVersioning<StorageItems1>({
-      key1: 33,
+      key1: anySchema,
     });
-    
+
     let initial = true;
     const unsub = storage.key1.subscribe((value) => {
       if (initial) {
@@ -481,7 +456,7 @@ test('Must get individual item from subscribe from individual store', async ({ p
 
     storage.save('key1', 'John' as any);
 
-    return storage.key1.get();
+    return storage.key1.value;
   });
 
   //
