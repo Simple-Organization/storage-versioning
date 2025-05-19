@@ -27,7 +27,7 @@ beforeEach(() => {
 //
 //
 
-test('Precisa dar erro caso o schema enviado não tem default()', () => {
+test('Deve lançar erro caso o schema enviado não tenha default()', () => {
   expect(() => {
     storageVersioning({ foo: s.trimmed() }, { foo: 'bar' });
   }).toThrow();
@@ -36,7 +36,7 @@ test('Precisa dar erro caso o schema enviado não tem default()', () => {
 //
 //
 
-test('new Storage must have each property and not parse using schemas-lib', async () => {
+test('Novo Storage deve ter cada propriedade e não fazer parse usando schemas-lib', async () => {
   const versioning = {
     name: s.nome().default('John'),
     age: s.int().min(10).max(100).default(null),
@@ -62,7 +62,7 @@ test('new Storage must have each property and not parse using schemas-lib', asyn
 //
 //
 
-test('save and load simple value', () => {
+test('Salvar e carregar valor simples', () => {
   const versioning = { foo: s.trimmed().default() };
   const storage = storageVersioning(versioning, { foo: 'bar' });
 
@@ -77,7 +77,7 @@ test('save and load simple value', () => {
 //
 //
 
-test('function versioning transforms value', async () => {
+test('Função versioning transforma valor', async () => {
   const versioning = {
     foo: s
       .trimmed()
@@ -96,7 +96,7 @@ test('function versioning transforms value', async () => {
 //
 //
 
-test('expiration removes value after time', async () => {
+test('Expiração remove valor após tempo', async () => {
   const versioning = { foo: s.any().default() };
   const storage = storageVersioning(versioning);
 
@@ -111,7 +111,7 @@ test('expiration removes value after time', async () => {
 //
 //
 
-test('removing value sets it to null', () => {
+test('Remover valor define como null', () => {
   const versioning = { foo: s.any().default() };
   const storage = storageVersioning(versioning, { foo: 'bar' as any });
 
@@ -123,7 +123,7 @@ test('removing value sets it to null', () => {
 //
 //
 
-test('loadAll loads all keys', () => {
+test('loadAll carrega todas as chaves', () => {
   const versioning = { a: s.string().default(), b: s.string().default() };
   const storage = storageVersioning(versioning, { a: 'x', b: 'y' });
 
@@ -131,7 +131,7 @@ test('loadAll loads all keys', () => {
   storage.save('b', 'B');
   storage.save('a', 'AA');
 
-  // Limpa sinais para simular reload
+  // Limpa sinais para simular recarregamento
   const storage2 = storageVersioning(versioning, { a: '', b: '' });
   storage2.loadAll();
   expect(storage2.a.value).toBe('AA');
@@ -141,11 +141,11 @@ test('loadAll loads all keys', () => {
 //
 //
 
-test('Caso tenha um valor definido com default, deve sempre retornar o valor definido como default', () => {
+test('Se houver um valor definido com default, deve sempre retornar o valor definido como default', () => {
   const versioning = { foo: s.any().default('value') };
   const storage = storageVersioning(versioning);
 
-  // O valor só é definido quando lêmos o valor
+  // O valor só é definido quando lemos o valor
   storage.loadAll();
   expect(storage.foo.value).toBe('value');
 
@@ -155,7 +155,7 @@ test('Caso tenha um valor definido com default, deve sempre retornar o valor def
   storage.save('foo', null);
   expect(storage.foo.value).toBe('value');
 
-  // Limpa sinais para simular reload
+  // Limpa sinais para simular recarregamento
   const storage2 = storageVersioning(versioning);
   storage2.loadAll();
 
@@ -166,7 +166,7 @@ test('Caso tenha um valor definido com default, deve sempre retornar o valor def
 //
 //
 
-test('Caso dê erro no localStorage, ele deve definir o valor padrão', () => {
+test('Caso ocorra erro no localStorage, deve definir o valor padrão', () => {
   const versioning = { foo: s.any().default('value') };
 
   localStorage.getItem = () => {
@@ -175,14 +175,38 @@ test('Caso dê erro no localStorage, ele deve definir o valor padrão', () => {
 
   const storage = storageVersioning(versioning);
 
-  // O valor só é definido quando lêmos o valor
+  // O valor só é definido quando lemos o valor
   const oldConsoleError = console.error;
   console.error = () => {
     console.log(
-      'console.error foi substituído momentaneamente para não poluir o console',
+      'console.error foi substituído temporariamente para não poluir o console',
     );
   };
   storage.loadAll();
   console.error = oldConsoleError;
   expect(storage.foo.value).toBe('value');
+});
+
+//
+//
+
+test("Se o valor default for null, undefined ou '', não deve salvar o valor no localStorage", () => {
+  const versioning = { foo: s.any().default() };
+
+  const storage = storageVersioning(versioning);
+
+  storage.save('foo', 'value');
+  expect(localStorage.getItem('foo')).toBeDefined();
+
+  storage.save('foo', null);
+  expect(localStorage.getItem('foo')).toBe(null);
+
+  storage.save('foo', undefined);
+  expect(localStorage.getItem('foo')).toBe(null);
+
+  storage.save('foo', '');
+  expect(localStorage.getItem('foo')).toBe(null);
+
+  storage.save('foo', 'value');
+  expect(localStorage.getItem('foo')).toBeDefined();
 });

@@ -41,7 +41,7 @@ export interface StorageVersioning<T extends StorageItems> {
    * @param data the data to save
    * @param exp the expiration date
    */
-  save<K extends keyof T>(key: K, data: T[K], exp?: Date): void;
+  save<K extends keyof T>(key: K, data: T[K] | null, exp?: Date): void;
 
   /**
    * Add the event listener to listen the window storage event

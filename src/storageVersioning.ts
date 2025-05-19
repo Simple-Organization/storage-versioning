@@ -31,12 +31,21 @@ export function storageVersioning<T extends StorageItems>(
   //
   //
 
-  function save<K extends keyof T>(key: K, data: T[K], exp?: Date): void {
+  function save<K extends keyof T>(
+    key: K,
+    data: T[K] | null,
+    exp?: Date,
+  ): void {
     clearTimeout(timeouts[key as string]);
 
-    if (data !== null && data !== undefined) {
+    // Comparação aqui para modificar o valor do store
+    if (data !== null && data !== undefined && data !== '') {
       data = versioning[key as string].parse(data, null) as T[K];
+    }
 
+    // Caso o valor padrão seja null ou undefined ou '', não salva no localStorage
+    // Lembrando que schemas-lib com parse(data, null) retorna null para os valores vazios
+    if (data !== null && data !== undefined && data !== '') {
       const dataToSave: StorageVersioningJSON<T> = {
         data,
       };
@@ -60,6 +69,9 @@ export function storageVersioning<T extends StorageItems>(
       setValue(key, null);
     }
   }
+
+  //
+  //
 
   function load<K extends keyof T>(key: K): T[K] | null {
     clearTimeout(timeouts[key as string]);
