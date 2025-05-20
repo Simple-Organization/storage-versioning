@@ -142,7 +142,7 @@
 
     "rollup-plugin-dts": ["rollup-plugin-dts@6.2.1", "", { "dependencies": { "magic-string": "^0.30.17" }, "optionalDependencies": { "@babel/code-frame": "^7.26.2" }, "peerDependencies": { "rollup": "^3.29.4 || ^4", "typescript": "^4.5 || ^5.0" } }, "sha512-sR3CxYUl7i2CHa0O7bA45mCrgADyAQ0tVtGSqi3yvH28M+eg1+g5d7kQ9hLvEz5dorK3XVsH5L2jwHLQf72DzA=="],
 
-    "schemas-lib": ["schemas-lib@3.0.0-next.22", "", {}, "sha512-Mf2DL5UtKcUd1B5Nhi7gZRSKZVje2rt9K2tNgGMpWp4Mdp27Ujh35MxFwGz6YjVaggRPLXkhlU19bJo8Sf4ueA=="],
+    "schemas-lib": ["schemas-lib@3.0.0-next.23", "", {}, "sha512-PS5aP0GHq6SvMaqce2S4Lbjm0KhvKxOCfiJYq/WxsGpj7A2WOeXjJ6wsM5ILCBAnFaZBEKQypDAGefNLZG9njg=="],
 
     "typescript": ["typescript@5.8.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ=="],
 

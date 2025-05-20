@@ -19,7 +19,7 @@ export function storageVersioning<T extends StorageItems>(
   const propertyStores = {} as { [K in keyof T]: Signal<T[K]> };
 
   for (const key of Object.keys(versioning) as Array<keyof T>) {
-    if (!versioning[key as string].def) {
+    if (!(versioning[key] as any).def) {
       throw new Error(
         `[storageVersioning] The schema for ${key as string} must have a default() method.`,
       );
@@ -124,7 +124,7 @@ export function storageVersioning<T extends StorageItems>(
 
   function setValue<K extends keyof T>(key: K, data: T[K] | null): T[K] | null {
     if (data === null) {
-      const def = versioning[key as string].def;
+      const def = (versioning[key] as any).def;
       let value: any;
 
       if (typeof def === 'function') {
