@@ -1,22 +1,24 @@
 {
   "name": "storage-versioning",
-  "version": "5.0.5",
+  "version": "5.0.6",
   "scripts": {
     "build": "tsc && rollup -c && node esbuild.mjs",
     "prepack": "bun run build"
   },
   "main": "dist/index.js",
   "dependencies": {
-    "@preact/signals": "^2.0.4",
     "schemas-lib": "latest"
+  },
+  "peerDependencies": {
+    "@preact/signals": ">=2.0.4"
   },
   "devDependencies": {
     "esbuild": "^0.23.1",
     "prettier": "^3.5.3",
-    "rollup": "^4.41.0",
+    "rollup": "^4.41.1",
     "rollup-plugin-dts": "^6.2.1",
     "typescript": "^5.8.3",
-    "@types/bun": "^1.2.13"
+    "@types/bun": "^1.2.14"
   },
   "files": [
     "dist/index.js",
